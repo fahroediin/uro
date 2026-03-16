@@ -90,7 +90,7 @@ export const aiService = {
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-3.1-flash-lite",
       contents: [{ role: "user", parts: parts }],
       config: {
         systemInstruction: systemInstruction,
@@ -111,7 +111,7 @@ export const aiService = {
 
     const systemInstruction = `You are an intent detection model. Analyze the following user text to determine if it's a request to generate an image. If it is, extract the subject of the image. Respond ONLY in the specified JSON format. The user text is: "${text}"`;
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-3.1-flash-lite",
       contents: systemInstruction,
       config: {
         responseMimeType: "application/json",
@@ -279,7 +279,7 @@ export const aiService = {
       }
     });
     const countTokensResponse = await ai.models.countTokens({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-3.1-flash-lite",
       contents: [{ role: "user", parts }],
     });
 
@@ -287,7 +287,7 @@ export const aiService = {
     console.log("input token: ", countTokensResponse.totalTokens);
 
     response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-3.1-flash-lite",
       contents: [{ role: "user", parts }],
       config: {
         systemInstruction: systemInstruction,
