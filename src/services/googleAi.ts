@@ -50,55 +50,23 @@ export const aiService = {
   ): Promise<string> => {
     return keyRotator.execute(async (ai) => {
       console.log("generateText");
-    const blob = new Blob([channelHistory], { type: "text/plain" });
-
-    const textPart: Part = { text: prompt };
-    const parts: Part[] = [textPart];
-
-    const file = await ai.files.upload({
-      file: blob,
-      config: {
-        displayName: "channel-history.txt",
-        mimeType: "text/plain",
-      },
-    });
-
-    let getFile = await ai.files.get({
-      name: file.name || "channel-history.txt",
-    });
-
-    while (getFile.state === "PROCESSING") {
-      getFile = await ai.files.get({
-        name: file.name || "channel-history.txt",
-      });
-      console.log(`current file status: ${getFile.state}`);
-      console.log("File is still processing, retrying in 5 seconds");
-
-      await new Promise((resolve) => {
-        setTimeout(resolve, 5000);
-      });
-    }
-    if (file.state === "FAILED") {
-    } else {
-      if (file.uri && file.mimeType) {
-        const fileContent = createPartFromUri(file.uri, file.mimeType);
-        parts.push(fileContent);
+      
+      const parts: Part[] = [];
+      if (channelHistory.trim()) {
+        parts.push({ text: `[Channel History Context]\n${channelHistory}\n\n[User Prompt]\n${prompt}` });
+      } else {
+        parts.push({ text: prompt });
       }
-    }
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
-      contents: [{ role: "user", parts: parts }],
-      config: {
-        systemInstruction: systemInstruction,
-        tools: guardrails.allowGoogleSearch ? [{ googleSearch: {} }] : [],
-        safetySettings: safetySettings,
-      },
-    });
-
-      ai.files
-        .delete({ name: file.name || "channel-history.txt" })
-        .catch(() => null);
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-lite",
+        contents: [{ role: "user", parts }],
+        config: {
+          systemInstruction: systemInstruction,
+          tools: guardrails.allowGoogleSearch ? [{ googleSearch: {} }] : [],
+          safetySettings: safetySettings,
+        },
+      });
 
       return response.text || "Something wrong";
     });
