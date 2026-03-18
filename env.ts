@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const EnvSchema = z.object({
   DISCORD_BOT_TOKEN: z.string(),
-  GEMINI_API_KEY: z.string(),
+  GEMINI_API_KEYS: z.string(),
   BOT_CHANNEL_ID: z.string(),
 });
 

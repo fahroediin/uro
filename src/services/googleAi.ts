@@ -11,11 +11,7 @@ import {
 import type { Attachment } from "discord.js";
 import env from "../../env";
 import { guardrails } from "../config";
-
-const GEMINI_API_KEY = env.GEMINI_API_KEY!;
-
-// Initialize the correct client
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+import { keyRotator } from "./keyRotator";
 
 const safetySettings = [
   {
@@ -52,7 +48,8 @@ export const aiService = {
     channelHistory: string,
     systemInstruction: string
   ): Promise<string> => {
-    console.log("generateText");
+    return keyRotator.execute(async (ai) => {
+      console.log("generateText");
     const blob = new Blob([channelHistory], { type: "text/plain" });
 
     const textPart: Part = { text: prompt };
@@ -99,15 +96,17 @@ export const aiService = {
       },
     });
 
-    ai.files
-      .delete({ name: file.name || "channel-history.txt" })
-      .catch(() => null);
+      ai.files
+        .delete({ name: file.name || "channel-history.txt" })
+        .catch(() => null);
 
-    return response.text || "Something wrong";
+      return response.text || "Something wrong";
+    });
   },
 
   generateTextIntent: async (text: string): Promise<string> => {
-    console.log("generateTextIntent");
+    return keyRotator.execute(async (ai) => {
+      console.log("generateTextIntent");
 
     const systemInstruction = `You are an intent detection model. Analyze the following user text to determine if it's a request to generate an image. If it is, extract the subject of the image. Respond ONLY in the specified JSON format. The user text is: "${text}"`;
     const response = await ai.models.generateContent({
@@ -133,7 +132,8 @@ export const aiService = {
       },
     });
 
-    return response.text || "Mager generate";
+      return response.text || "Mager generate";
+    });
   },
 
   /**
@@ -144,7 +144,8 @@ export const aiService = {
   generateImage: async (
     prompt: string
   ): Promise<{ image?: Buffer; text: string }> => {
-    console.log("generateImage");
+    return keyRotator.execute(async (ai) => {
+      console.log("generateImage");
 
     if (!guardrails.allowImageGeneration) {
       return { text: "Image generation is disabled.", image: undefined };
@@ -164,16 +165,18 @@ export const aiService = {
     });
 
     let textOutput = "";
-    let imgOutput: Buffer | undefined = undefined;
+      let imgOutput: Buffer | undefined = undefined;
 
-    return { text: textOutput, image: imgOutput };
+      return { text: textOutput, image: imgOutput };
+    });
   },
 
   generateImageToImage: async (
     prompt: string,
     image: ArrayBuffer
   ): Promise<{ image?: Buffer; text: string }> => {
-    console.log(prompt.substring(0, 10), "... generateImageToImage()");
+    return keyRotator.execute(async (ai) => {
+      console.log(prompt.substring(0, 10), "... generateImageToImage()");
 
     if (!guardrails.allowImageGeneration) {
       return { text: "Image generation is disabled.", image: undefined };
@@ -204,9 +207,10 @@ export const aiService = {
     });
 
     let textOutput = "";
-    let imgOutput: Buffer | undefined = undefined;
+      let imgOutput: Buffer | undefined = undefined;
 
-    return { text: textOutput, image: imgOutput };
+      return { text: textOutput, image: imgOutput };
+    });
   },
 
   generateContentWithFileContext: async (
@@ -216,7 +220,8 @@ export const aiService = {
     channelHistory: string,
     systemInstruction: string
   ): Promise<{ text: string; image?: Buffer }> => {
-    console.log(
+    return keyRotator.execute(async (ai) => {
+      console.log(
       prompt.substring(0, 10),
       "... generateContentWithFileContext()"
     );
@@ -306,10 +311,11 @@ export const aiService = {
     });
 
     // Cleanup files
-    [historyFile, attachmentFile].forEach((file) => {
-      if (file?.name) ai.files.delete({ name: file.name }).catch(() => null);
-    });
+      [historyFile, attachmentFile].forEach((file) => {
+        if (file?.name) ai.files.delete({ name: file.name }).catch(() => null);
+      });
 
-    return { text: textOutput, image: imgOutput };
+      return { text: textOutput, image: imgOutput };
+    });
   },
 };
