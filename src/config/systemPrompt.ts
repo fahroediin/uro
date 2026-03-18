@@ -69,7 +69,14 @@ ${persona.exampleResponses.map((ex) => `"${ex}"`).join("\n")}`);
   }
 
   // ─── CONTEXT ───────────────────────────────────────────────
+  const wibTime = new Date().toLocaleString("id-ID", {
+    timeZone: "Asia/Jakarta",
+    dateStyle: "full",
+    timeStyle: "long",
+  });
+
   sections.push(`# Current Context
+- Date & Time: ${wibTime} WIB
 - You are talking to: ${userName}
 - Platform: Discord server
 - You will receive recent channel history for conversation context.
