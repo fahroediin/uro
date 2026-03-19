@@ -111,6 +111,23 @@ function extractJson(str: string) {
   return null;
 }
 
+export function getCurrentWibDateTime(): string {
+  const now = new Date();
+  const wibDate = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+  
+  const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  
+  const dayName = dayNames[wibDate.getUTCDay()];
+  const date = wibDate.getUTCDate();
+  const monthName = monthNames[wibDate.getUTCMonth()];
+  const year = wibDate.getUTCFullYear();
+  const hours = String(wibDate.getUTCHours()).padStart(2, '0');
+  const minutes = String(wibDate.getUTCMinutes()).padStart(2, '0');
+  
+  return `${dayName}, ${date} ${monthName} ${year} ${hours}:${minutes} WIB`;
+}
+
 export const formatTimestamp = (ts: number) =>
   ((d = new Date(ts)) =>
     `[${d.getMonth() + 1}/${d.getDate()}, ${d.getHours() % 12 || 12}:${String(

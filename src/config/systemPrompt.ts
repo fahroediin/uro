@@ -12,6 +12,7 @@
 import { persona } from "./persona";
 import { guardrails } from "./guardrails";
 import { responseConfig } from "./response";
+import { getCurrentWibDateTime } from "../helpers/util";
 
 /**
  * Builds the full system prompt injected into every AI call.
@@ -69,14 +70,10 @@ ${persona.exampleResponses.map((ex) => `"${ex}"`).join("\n")}`);
   }
 
   // ─── CONTEXT ───────────────────────────────────────────────
-  const wibTime = new Date().toLocaleString("id-ID", {
-    timeZone: "Asia/Jakarta",
-    dateStyle: "full",
-    timeStyle: "long",
-  });
+  const wibTime = getCurrentWibDateTime();
 
   sections.push(`# Current Context
-- Date & Time: ${wibTime} WIB
+- Date & Time: ${wibTime}
 - You are talking to: ${userName}
 - Platform: Discord server
 - You will receive recent channel history for conversation context.
