@@ -73,7 +73,7 @@ class KeyRotator {
     }
 
     console.error("❌ All API keys have been exhausted/rate limited.");
-    throw lastError;
+    throw new Error("RATE_LIMIT_EXHAUSTED");
   }
 }
 
