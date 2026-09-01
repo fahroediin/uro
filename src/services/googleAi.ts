@@ -1,17 +1,15 @@
 import {
   createPartFromUri,
-  GenerateContentResponse,
-  GoogleGenAI,
   HarmBlockThreshold,
   HarmCategory,
-  Modality,
-  Type,
   type Part,
 } from "@google/genai";
 import type { Attachment } from "discord.js";
-import env from "../../env";
-import { guardrails } from "../config";
+import { aiConfig, guardrails } from "../config";
 import { keyRotator } from "./keyRotator";
+
+const RATE_LIMIT_MESSAGE =
+  "Duh, Uro lagi kena limit dari Google nih (Quota Exceeded / 429). Bentar ya, kasih waktu Uro buat napas semenit, baru coba lagi! 🐍";
 
 const safetySettings = [
   {
@@ -51,16 +49,18 @@ export const aiService = {
     try {
       return await keyRotator.execute(async (ai) => {
         console.log("generateText");
-        
+
         const parts: Part[] = [];
         if (channelHistory.trim()) {
-          parts.push({ text: `[Channel History Context]\n${channelHistory}\n\n[User Prompt]\n${prompt}` });
+          parts.push({
+            text: `[Channel History Context]\n${channelHistory}\n\n[User Prompt]\n${prompt}`,
+          });
         } else {
           parts.push({ text: prompt });
         }
 
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash-lite",
+          model: aiConfig.textModel,
           contents: [{ role: "user", parts }],
           config: {
             systemInstruction: systemInstruction,
@@ -73,135 +73,16 @@ export const aiService = {
       });
     } catch (e: any) {
       if (e.message === "RATE_LIMIT_EXHAUSTED") {
-        return "Duh, Uro lagi kena limit dari Google nih (Quota Exceeded / 429). Bentar ya, kasih waktu Uro buat napas semenit, baru coba lagi! 🐍";
+        return RATE_LIMIT_MESSAGE;
       }
       throw e;
     }
-  },
-
-  generateTextIntent: async (text: string): Promise<string> => {
-    return keyRotator.execute(async (ai) => {
-      console.log("generateTextIntent");
-
-    const systemInstruction = `You are an intent detection model. Analyze the following user text to determine if it's a request to generate an image. If it is, extract the subject of the image. Respond ONLY in the specified JSON format. The user text is: "${text}"`;
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
-      contents: systemInstruction,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            isImageRequest: {
-              type: Type.BOOLEAN,
-              description: "True if the user wants to create an image.",
-            },
-            imagePrompt: {
-              type: Type.STRING,
-              description:
-                "The prompt for the image, if isImageRequest is true.",
-            },
-          },
-          required: ["isImageRequest", "imagePrompt"],
-        },
-      },
-    });
-
-      return response.text || "Mager generate";
-    });
   },
 
   /**
-   * Generates an image based on a prompt.
-   * @param prompt The text prompt for image generation.
-   * @returns A Buffer containing the image data.
+   * Generates a response using an uploaded file (image/document) as context.
+   * Channel history is passed inline as text (no extra Files API upload).
    */
-  generateImage: async (
-    prompt: string
-  ): Promise<{ image?: Buffer; text: string }> => {
-    try {
-      return await keyRotator.execute(async (ai) => {
-        console.log("generateImage");
-
-        if (!guardrails.allowImageGeneration) {
-          return { text: "Image generation is disabled.", image: undefined };
-        }
-
-        return { text: "No image sir, hehe", image: undefined }; // Temporary disable image generation
-
-        let preprompt = `Generate an image with this prompt, don't add a text in the image. Max-width: 500px. Prompt: ${prompt}`;
-
-        const response = await ai.models.generateContent({
-          model: "gemini-3.1-flash-image-preview",
-          contents: preprompt,
-          config: {
-            responseModalities: [Modality.TEXT, Modality.IMAGE],
-            safetySettings: safetySettings,
-          },
-        });
-
-        let textOutput = "";
-        let imgOutput: Buffer | undefined = undefined;
-
-        return { text: textOutput, image: imgOutput };
-      });
-    } catch (e: any) {
-      if (e.message === "RATE_LIMIT_EXHAUSTED") {
-        return { text: "Duh, Uro lagi kena limit dari Google nih (Quota Exceeded / 429). Bentar ya, kasih waktu Uro buat napas semenit, baru coba lagi! 🐍" };
-      }
-      throw e;
-    }
-  },
-
-  generateImageToImage: async (
-    prompt: string,
-    image: ArrayBuffer
-  ): Promise<{ image?: Buffer; text: string }> => {
-    try {
-      return await keyRotator.execute(async (ai) => {
-        console.log(prompt.substring(0, 10), "... generateImageToImage()");
-
-        if (!guardrails.allowImageGeneration) {
-          return { text: "Image generation is disabled.", image: undefined };
-        }
-
-        return { text: "No image sir, hehe", image: undefined }; // Temporary disable image-to-image generation
-
-        const base64String = Buffer.from(image).toString("base64");
-        let preprompt = `Generate an image with this prompt, don't add a text in the image. Max-width: 500px. Prompt: ${prompt}`;
-
-        const contents = [
-          { text: preprompt },
-          {
-            inlineData: {
-              mimeType: "image/png",
-              data: base64String,
-            },
-          },
-        ];
-
-        const response = await ai.models.generateContent({
-          model: "gemini-3.1-flash-image-preview",
-          contents,
-          config: {
-            responseModalities: [Modality.TEXT, Modality.IMAGE],
-            safetySettings: safetySettings,
-          },
-        });
-
-        let textOutput = "";
-        let imgOutput: Buffer | undefined = undefined;
-
-        return { text: textOutput, image: imgOutput };
-      });
-    } catch (e: any) {
-      if (e.message === "RATE_LIMIT_EXHAUSTED") {
-        return { text: "Duh, Uro lagi kena limit dari Google nih (Quota Exceeded / 429). Bentar ya, kasih waktu Uro buat napas semenit, baru coba lagi! 🐍" };
-      }
-      throw e;
-    }
-  },
-
   generateContentWithFileContext: async (
     prompt: string,
     attachment: Attachment,
@@ -216,73 +97,49 @@ export const aiService = {
           "... generateContentWithFileContext()"
         );
 
-        // Sanitize filename
-        const sanitizeFileName = (filename: string): string => {
-          return (
-            filename
-              .toLowerCase()
-              .replace(/[^a-z0-9-]/g, "-")
-              .replace(/-+/g, "-")
-              .replace(/^-+|-+$/g, "")
-              .substring(0, 25) || "attachment"
-          );
-        };
+        // Sanitize filename for the Files API displayName.
+        const sanitizeFileName = (filename: string): string =>
+          filename
+            .toLowerCase()
+            .replace(/[^a-z0-9-]/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .substring(0, 25) || "attachment";
 
-        // Helper function to upload and wait for file processing
-        const uploadAndWaitForFile = async (
-          blob: Blob,
-          displayName: string,
-          mimeType: string
-        ) => {
-          const file = await ai.files.upload({
-            file: blob,
-            config: { displayName, mimeType },
-          });
+        // Inline channel history as text — cheaper and faster than uploading
+        // it through the Files API just to delete it moments later.
+        const promptText = channelHistory.trim()
+          ? `[Channel History Context]\n${channelHistory}\n\n[User Prompt]\n${prompt}`
+          : prompt;
+        const parts: Part[] = [{ text: promptText }];
 
-          let fileStatus = await ai.files.get({ name: file.name || displayName });
-
-          while (fileStatus.state === "PROCESSING") {
-            await new Promise((resolve) => setTimeout(resolve, 5000));
-            fileStatus = await ai.files.get({ name: file.name || displayName });
-          }
-
-          return fileStatus.state === "FAILED" ? null : file;
-        };
-
-        const parts: Part[] = [{ text: prompt }];
-
-        // Upload both files
-        const [historyFile, attachmentFile] = await Promise.all([
-          uploadAndWaitForFile(
-            new Blob([channelHistory], { type: "text/plain" }),
-            "history.txt",
-            "text/plain"
-          ),
-          uploadAndWaitForFile(
-            new Blob([attachmentBuffer], {
-              type: attachment.contentType || "application/octet-stream",
-            }),
-            sanitizeFileName(attachment.name),
-            attachment.contentType || "application/octet-stream"
-          ),
-        ]);
-
-        // Add file parts if uploads succeeded
-        [historyFile, attachmentFile].forEach((file) => {
-          if (file?.uri && file?.mimeType) {
-            parts.push(createPartFromUri(file.uri, file.mimeType));
-          }
-        });
-        const countTokensResponse = await ai.models.countTokens({
-          model: "gemini-2.5-flash-lite",
-          contents: [{ role: "user", parts }],
+        // Upload ONLY the real attachment and wait for it to finish processing.
+        const uploaded = await ai.files.upload({
+          file: new Blob([attachmentBuffer], {
+            type: attachment.contentType || "application/octet-stream",
+          }),
+          config: {
+            displayName: sanitizeFileName(attachment.name),
+            mimeType: attachment.contentType || "application/octet-stream",
+          },
         });
 
-        let response: GenerateContentResponse;
-        console.log("input token: ", countTokensResponse.totalTokens);
+        let ready = uploaded;
+        if (uploaded.name) {
+          let status = await ai.files.get({ name: uploaded.name });
+          while (status.state === "PROCESSING") {
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+            status = await ai.files.get({ name: uploaded.name });
+          }
+          ready = status;
+        }
 
-        response = await ai.models.generateContent({
-          model: "gemini-2.5-flash-lite",
+        if (ready.state !== "FAILED" && ready.uri && ready.mimeType) {
+          parts.push(createPartFromUri(ready.uri, ready.mimeType));
+        }
+
+        const response = await ai.models.generateContent({
+          model: aiConfig.fileModel,
           contents: [{ role: "user", parts }],
           config: {
             systemInstruction: systemInstruction,
@@ -290,26 +147,24 @@ export const aiService = {
           },
         });
 
-        // Extract response content
+        // Extract response content.
         let textOutput = "";
         let imgOutput: Buffer | undefined = undefined;
-
         response.candidates?.[0]?.content?.parts?.forEach((part) => {
           if (part.text) textOutput += part.text;
           else if (part.inlineData?.data)
             imgOutput = Buffer.from(part.inlineData.data, "base64");
         });
 
-        // Cleanup files
-        [historyFile, attachmentFile].forEach((file) => {
-          if (file?.name) ai.files.delete({ name: file.name }).catch(() => null);
-        });
+        // Cleanup uploaded file (best-effort).
+        if (uploaded.name)
+          ai.files.delete({ name: uploaded.name }).catch(() => null);
 
-        return { text: textOutput, image: imgOutput };
+        return { text: textOutput || "Something wrong", image: imgOutput };
       });
     } catch (e: any) {
       if (e.message === "RATE_LIMIT_EXHAUSTED") {
-        return { text: "Duh, Uro lagi kena limit dari Google nih (Quota Exceeded / 429). Bentar ya, kasih waktu Uro buat napas semenit, baru coba lagi! 🐍" };
+        return { text: RATE_LIMIT_MESSAGE };
       }
       throw e;
     }

@@ -66,8 +66,10 @@ export const guardrails = {
   allowGoogleSearch: true,
 
   /**
-   * Apakah bot boleh generate gambar.
-   * (Catatan: fitur generate gambar saat ini disabled di service layer)
+   * (DEPRECATED) Image generation TIDAK diimplementasikan di service layer.
+   * Jalur intent-detection & image-gen sudah dihapus untuk menghemat token.
+   * Aktifkan kembali hanya jika Anda menambah model image GA yang baru
+   * (mis. gemini-3.1-flash-image / Nano Banana 2) di googleAi.ts.
    */
-  allowImageGeneration: true,
+  allowImageGeneration: false,
 };

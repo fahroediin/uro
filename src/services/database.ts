@@ -21,6 +21,12 @@ db.run(
   )`
 );
 
+// Speeds up per-channel history lookups and pruning.
+db.run(
+  `CREATE INDEX IF NOT EXISTS idx_channel_messages_channel_ts
+     ON channel_messages (channelId, timestamp)`
+);
+
 export const dbService = {
   addChannelMessage: (message: Omit<ChannelMessage, "id">) => {
     db.prepare(
@@ -41,31 +47,23 @@ export const dbService = {
   getChannelHistory: (channelId: string): ChannelMessage[] => {
     const messages = db
       .prepare(
-        `SELECT * FROM channel_messages WHERE channelId = ? ORDER BY timestamp DESC LIMIT ${guardrails.maxHistoryMessages}`
+        `SELECT * FROM channel_messages WHERE channelId = ? ORDER BY timestamp DESC LIMIT ?`
       )
-      .all(channelId) as ChannelMessage[];
+      .all(channelId, guardrails.maxHistoryMessages) as ChannelMessage[];
     return messages.reverse();
   },
 
   pruneChannelHistory: (channelId: string) => {
-    const messageCount = db
-      .prepare(
-        "SELECT COUNT(*) as count FROM channel_messages WHERE channelId = ?"
-      )
-      .get(channelId) as { count: number };
-
-    if (messageCount.count > guardrails.maxHistoryMessages) {
-      const oldestMessage = db
-        .prepare(
-          "SELECT id FROM channel_messages WHERE channelId = ? ORDER BY timestamp ASC LIMIT 1"
-        )
-        .get(channelId) as { id: number };
-
-      if (oldestMessage) {
-        db.prepare("DELETE FROM channel_messages WHERE id = ?").run(
-          oldestMessage.id
-        );
-      }
-    }
+    // Keep only the most recent `maxHistoryMessages` rows for this channel.
+    db.prepare(
+      `DELETE FROM channel_messages
+         WHERE channelId = ?
+           AND id NOT IN (
+             SELECT id FROM channel_messages
+              WHERE channelId = ?
+              ORDER BY timestamp DESC
+              LIMIT ?
+           )`
+    ).run(channelId, channelId, guardrails.maxHistoryMessages);
   },
 };

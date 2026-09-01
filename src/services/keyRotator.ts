@@ -1,9 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
 import env from "../../env";
 
+// How long a rate-limited key is skipped before being retried.
+const COOLDOWN_MS = 60_000;
+
 class KeyRotator {
   private keys: string[];
   private clients: GoogleGenAI[];
+  private cooldownUntil: number[];
   private currentIndex: number = 0;
 
   constructor() {
@@ -18,40 +22,40 @@ class KeyRotator {
     }
 
     this.clients = this.keys.map((key) => new GoogleGenAI({ apiKey: key }));
+    this.cooldownUntil = this.keys.map(() => 0);
     console.log(`🔑 Initialized KeyRotator with ${this.keys.length} keys.`);
   }
 
-  getClient(): GoogleGenAI {
-    return this.clients[this.currentIndex];
-  }
-
-  getCurrentKeyMasked(): string {
-    const key = this.keys[this.currentIndex];
+  private maskKey(index: number): string {
+    const key = this.keys[index];
     if (key.length <= 8) return "***";
     return `${key.slice(0, 4)}...${key.slice(-4)}`;
   }
 
-  rotateOnError(): void {
-    this.currentIndex = (this.currentIndex + 1) % this.keys.length;
-    console.log(
-      `🔄 API Key rotated! Now using key: ${this.getCurrentKeyMasked()}`
-    );
+  /** Pick the next key that isn't cooling down. Returns -1 if all are. */
+  private nextAvailableIndex(): number {
+    const now = Date.now();
+    for (let i = 0; i < this.keys.length; i++) {
+      const idx = (this.currentIndex + i) % this.keys.length;
+      if (this.cooldownUntil[idx] <= now) {
+        this.currentIndex = idx;
+        return idx;
+      }
+    }
+    return -1;
   }
 
   async execute<T>(operation: (client: GoogleGenAI) => Promise<T>): Promise<T> {
-    const maxAttempts = this.keys.length;
-    let attempts = 0;
-    let lastError: any;
+    // Try each key at most once per call.
+    for (let attempt = 0; attempt < this.keys.length; attempt++) {
+      const idx = this.nextAvailableIndex();
+      if (idx === -1) break; // every key is cooling down
 
-    while (attempts < maxAttempts) {
-      const client = this.getClient();
       try {
-        return await operation(client);
+        return await operation(this.clients[idx]);
       } catch (error: any) {
-        lastError = error;
-
         console.error(
-          `[GenAI Error with key ${this.getCurrentKeyMasked()}]:`,
+          `[GenAI Error with key ${this.maskKey(idx)}]:`,
           error.message || error
         );
 
@@ -62,17 +66,21 @@ class KeyRotator {
           String(error?.message).toLowerCase().includes("resource exhausted");
 
         if (isRateLimit) {
-          console.warn(`⚠️ Rate limit hit! Rotating to next key...`);
-          this.rotateOnError();
-          attempts++;
+          this.cooldownUntil[idx] = Date.now() + COOLDOWN_MS;
+          this.currentIndex = (idx + 1) % this.keys.length;
+          console.warn(
+            `⚠️ Rate limit on key ${this.maskKey(idx)} — cooling down ${
+              COOLDOWN_MS / 1000
+            }s, rotating to next key.`
+          );
         } else {
-          // Non-rate limit error, throw immediately (e.g., policy violation)
+          // Non-rate-limit error (e.g. policy violation) — fail fast.
           throw error;
         }
       }
     }
 
-    console.error("❌ All API keys have been exhausted/rate limited.");
+    console.error("❌ All API keys are rate limited / exhausted.");
     throw new Error("RATE_LIMIT_EXHAUSTED");
   }
 }
