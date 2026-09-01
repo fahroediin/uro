@@ -4,6 +4,11 @@ import { guardrails } from "../config";
 
 const db = new Database("uro_bot.sqlite");
 
+// Enable WAL mode and set a busy timeout to prevent SQLITE_BUSY errors
+db.run("PRAGMA journal_mode = WAL;");
+db.run("PRAGMA busy_timeout = 5000;");
+db.run("PRAGMA synchronous = NORMAL;"); // Better performance with WAL
+
 // Initialize tables
 
 db.run(
