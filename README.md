@@ -143,6 +143,10 @@ uro/
   `src/config/ai.ts`.
 - **Key rotation**: isi `GEMINI_API_KEYS` dengan beberapa key dipisah koma;
   key yang kena rate limit akan di-cooldown ~60 detik lalu dipakai lagi.
+- **Region diblokir?** Kalau VPS Anda di negara yang diblokir Gemini
+  ("User location is not supported"), set `GEMINI_BASE_URL` ke proxy di
+  region yang didukung (mis. Cloudflare Worker yang meneruskan ke
+  `generativelanguage.googleapis.com`). Kosongkan untuk koneksi langsung.
 - **Image generation dihapus**. Untuk mengaktifkan kembali: tambahkan fungsi
   generate di `googleAi.ts` dengan model image GA (mis.
   `gemini-3.1-flash-image` / Nano Banana 2), lalu set

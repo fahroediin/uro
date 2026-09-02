@@ -21,9 +21,17 @@ class KeyRotator {
       process.exit(1);
     }
 
-    this.clients = this.keys.map((key) => new GoogleGenAI({ apiKey: key }));
+    const baseUrl = env.GEMINI_BASE_URL?.trim();
+    this.clients = this.keys.map(
+      (key) =>
+        new GoogleGenAI({
+          apiKey: key,
+          ...(baseUrl ? { httpOptions: { baseUrl } } : {}),
+        })
+    );
     this.cooldownUntil = this.keys.map(() => 0);
     console.log(`🔑 Initialized KeyRotator with ${this.keys.length} keys.`);
+    if (baseUrl) console.log(`🌐 Gemini base URL override: ${baseUrl}`);
   }
 
   private maskKey(index: number): string {
