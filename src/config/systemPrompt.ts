@@ -13,13 +13,17 @@ import { persona } from "./persona";
 import { guardrails } from "./guardrails";
 import { responseConfig } from "./response";
 import { getCurrentWibDateTime } from "../helpers/util";
+import type { Platform } from "../core/types";
+import { platformConfigs } from "./platforms";
 
 /**
  * Builds the full system prompt injected into every AI call.
  * @param userName - The display name of the user being talked to.
+ * @param platform - The platform (default "discord" for backward compatibility).
  * @returns The system instruction string.
  */
-export function buildSystemPrompt(userName: string): string {
+export function buildSystemPrompt(userName: string, platform: Platform = "discord"): string {
+  const platformCfg = platformConfigs[platform];
   const sections: string[] = [];
 
   // ─── IDENTITY ──────────────────────────────────────────────
@@ -37,7 +41,7 @@ ${persona.personality.map((trait) => `- ${trait}`).join("\n")}`);
 - Tone: ${responseConfig.tone}
 - Reply style: ${responseConfig.replyStyle}
 - Use emojis: ${persona.useEmojis ? "yes, naturally" : "no"}
-- Use Discord markdown formatting: ${responseConfig.useMarkdown ? "yes" : "no"}
+- Use ${platformCfg.platformLabel} markdown formatting: ${platformCfg.useMarkdown ? "yes" : "no"}
 - Max response length: ~${responseConfig.maxResponseLength} characters. If longer, split into logical sections.`);
 
   // ─── MUST DO ───────────────────────────────────────────────
@@ -75,7 +79,7 @@ ${persona.exampleResponses.map((ex) => `"${ex}"`).join("\n")}`);
   sections.push(`# Current Context
 - Date & Time: ${wibTime}
 - You are talking to: ${userName}
-- Platform: Discord server
+- Platform: ${platformCfg.platformLabel}
 - You will receive recent channel history for conversation context.
 - Always be aware of the ongoing conversation — don't repeat what was just said.`);
 
