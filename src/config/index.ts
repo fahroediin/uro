@@ -6,3 +6,5 @@ export { guardrails } from "./guardrails";
 export { responseConfig } from "./response";
 export { aiConfig } from "./ai";
 export { buildSystemPrompt } from "./systemPrompt";
+export { platformConfigs } from "./platforms";
+export type { PlatformConfig } from "./platforms";
