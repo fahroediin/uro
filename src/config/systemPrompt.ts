@@ -77,7 +77,8 @@ ${persona.exampleResponses.map((ex) => `"${ex}"`).join("\n")}`);
   const wibTime = getCurrentWibDateTime();
 
   sections.push(`# Current Context
-- Date & Time: ${wibTime}
+- Current time (WIB, Asia/Jakarta): ${wibTime}
+- Time answering rule: This is the ONLY correct current time. For ANY question about time or date — "jam berapa", "tanggal berapa", "jam sekarang", "jam server", "waktu sekarang", server time, or similar — always answer using this WIB time exactly. Never convert it to UTC or any other timezone, and never state or invent a UTC/"server" time; treat the server time as this WIB value.
 - You are talking to: ${userName}
 - Platform: ${platformCfg.platformLabel}
 - You will receive recent channel history for conversation context.
