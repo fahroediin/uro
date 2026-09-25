@@ -4,7 +4,6 @@ import {
   HarmCategory,
   type Part,
 } from "@google/genai";
-import type { Attachment } from "discord.js";
 import { aiConfig, guardrails } from "../config";
 import { keyRotator } from "./keyRotator";
 
@@ -85,7 +84,7 @@ export const aiService = {
    */
   generateContentWithFileContext: async (
     prompt: string,
-    attachment: Attachment,
+    attachment: { name: string; contentType: string | null },
     attachmentBuffer: ArrayBuffer,
     channelHistory: string,
     systemInstruction: string
