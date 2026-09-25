@@ -40,7 +40,10 @@ export const guardrails = {
    * Kosongkan array [] untuk mengizinkan SEMUA channel.
    * Isi dengan channel IDs spesifik untuk membatasi.
    *
-   * Contoh: ["123456789012345678", "987654321098765432"]
+   * Menerima RAW channel id ATAU chatId yang sudah diberi prefix platform
+   * (mis. "123..." ataupun "discord:123...") — keduanya akan dicocokkan.
+   *
+   * Contoh: ["123456789012345678", "discord:987654321098765432"]
    */
   allowedChannels: [] as string[],
 

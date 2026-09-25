@@ -27,19 +27,9 @@ export const responseConfig = {
   maxResponseLength: 1800,
 
   /**
-   * Apakah bot boleh menggunakan markdown formatting Discord.
-   */
-  useMarkdown: true,
-
-  /**
    * Otomatis split pesan panjang ke beberapa message.
    */
   splitLongMessages: true,
-
-  /**
-   * Ukuran maksimum per chunk saat splitting (dalam karakter).
-   */
-  maxChunkSize: 1500,
 
   /**
    * Tampilkan typing indicator saat bot sedang memproses.
@@ -51,11 +41,6 @@ export const responseConfig = {
    * sebelum memproses batch pesan.
    */
   debounceDelayMs: 2000,
-
-  /**
-   * Delay antar pesan saat mengirim multi-chunk reply (ms).
-   */
-  multiMessageDelayMs: 1000,
 
   /**
    * Pesan error yang bisa dikustomisasi.

@@ -67,7 +67,15 @@ export class DiscordAdapter implements PlatformAdapter {
         if (!first) {
           await new Promise((r) => setTimeout(r, platformConfigs.discord.multiMessageDelayMs));
         }
-        await (ch as any).send({ content: chunk, files: firstFiles });
+        if (first && msg.replyToMessageId) {
+          await (ch as any).send({
+            content: chunk,
+            files: firstFiles,
+            reply: { messageReference: msg.replyToMessageId, failIfNotExists: false },
+          });
+        } else {
+          await (ch as any).send({ content: chunk, files: firstFiles });
+        }
         firstFiles = [];
         first = false;
       }
