@@ -63,6 +63,22 @@ test("pesan tanpa mention di channel non-terdaftar: tercatat tapi tidak dibalas"
   expect(sent.length).toBe(0);
 });
 
+test("allowedChannels berisi RAW id (tanpa prefix) tetap match dengan chatId ber-prefix", async () => {
+  const { deps, adapter, sent, added } = makeDeps();
+  // allowedChannels diisi RAW id (tanpa prefix platform), sedangkan chatId pesan
+  // yang sesungguhnya sudah diberi prefix "discord:". Gate ini seharusnya tetap
+  // meloloskan balasan karena unprefixed id juga dicocokkan.
+  deps.guardrails.allowedChannels = ["c1"];
+  const engine = createConversationEngine(deps as any);
+  // isMentioned: true supaya lolos gate shouldRespond() terlepas dari respondChannelIds,
+  // sehingga test ini murni memverifikasi gate allowedChannels di conversationEngine.
+  await engine.handle(msg({ isMentioned: true, chatId: "discord:c1" }), adapter);
+  await wait(40);
+  expect(added.length).toBe(1);
+  expect(sent.length).toBe(1);
+  expect(sent[0].msg.text).toBe("jawaban AI");
+});
+
 test("dua pesan cepat user sama → satu pemanggilan AI (debounce)", async () => {
   const { deps, adapter, sent } = makeDeps();
   let aiCalls = 0;

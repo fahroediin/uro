@@ -1,5 +1,5 @@
 import { platformConfigs } from "../config/platforms";
-import { formatTimestamp, splitTextPreserveWords } from "../helpers/util";
+import { formatTimestamp } from "../helpers/util";
 import type {
   MessageHandler,
   NormalizedMessage,
@@ -91,8 +91,17 @@ export function createConversationEngine(deps: EngineDeps): { handle: MessageHan
     }
 
     if (!shouldRespond(primary)) return;
-    if (deps.guardrails.allowedChannels.length > 0 &&
-        !deps.guardrails.allowedChannels.includes(primary.chatId)) return;
+    if (deps.guardrails.allowedChannels.length > 0) {
+      const rawChatId = primary.chatId.includes(":")
+        ? primary.chatId.slice(primary.chatId.indexOf(":") + 1)
+        : primary.chatId;
+      if (
+        !deps.guardrails.allowedChannels.includes(primary.chatId) &&
+        !deps.guardrails.allowedChannels.includes(rawChatId)
+      ) {
+        return;
+      }
+    }
 
     if (deps.responseConfig.typingIndicator) {
       await adapter.sendTyping(primary.chatId).catch(() => {});
