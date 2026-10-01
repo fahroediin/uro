@@ -1,5 +1,5 @@
 import { platformConfigs } from "../config/platforms";
-import { formatTimestamp } from "../helpers/util";
+import { formatTimestamp, isGreeting } from "../helpers/util";
 import type {
   MessageHandler,
   NormalizedMessage,
@@ -46,6 +46,7 @@ export interface EngineDeps {
   guardrails: { allowAttachments: boolean; maxFileSize: number; allowedChannels: string[] };
   responseConfig: { typingIndicator: boolean; errorMessages: { generic: string; attachmentFail: string } };
   debounceDelayMs: number;
+  retrieveContext?: (query: string) => Promise<string>;
 }
 
 export function createConversationEngine(deps: EngineDeps): { handle: MessageHandler } {
@@ -147,7 +148,14 @@ export function createConversationEngine(deps: EngineDeps): { handle: MessageHan
         await reply(deps.responseConfig.errorMessages.attachmentFail);
       }
     } else {
-      const text = await deps.ai.generateText(prompt, history, sys);
+      let docContext = "";
+      if (deps.retrieveContext && !isGreeting(primary.text)) {
+        docContext = await deps.retrieveContext(primary.text);
+      }
+      const finalPrompt = docContext
+        ? `[Konteks Dokumen]\n${docContext}\n\n${prompt}`
+        : prompt;
+      const text = await deps.ai.generateText(finalPrompt, history, sys);
       await reply(text);
     }
   }
