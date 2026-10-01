@@ -342,6 +342,38 @@ curl -s -w "\n[HTTP %{http_code}]\n" -X POST \
 
 ---
 
+## RAG (Knowledge Base Dokumen)
+
+Bot bisa menjawab berdasarkan dokumen milikmu sendiri. **Default OFF** — bot
+berperilaku persis seperti biasa sampai kamu mengaktifkannya.
+
+### Cara pakai
+
+1. Taruh file `.txt` / `.md` di folder `documents/` (folder ini di-gitignore).
+2. Set `enabled: true` di `src/config/rag.ts` (`ragConfig.enabled`).
+3. Jalankan bot (`bun start`). Saat start, bot meng-index dokumen (sync
+   berbasis hash: hanya file baru/berubah yang di-embed ulang, file yang
+   dihapus ikut dibersihkan dari index).
+4. Tanya isi dokumen di channel bot — bot menjawab dari dokumen dan menyebut
+   sumbernya.
+
+### Detail teknis
+
+- **Embedding** via Gemini API (memakai key rotation yang sama dengan chat).
+- **Vector store**: LanceDB (lokal, data di `rag_data/`, di-gitignore).
+- Retrieval hanya jalan setelah gate (channel/guardrail) dan dilewati untuk
+  sapaan. Bila retrieval/sync gagal, bot tetap menjawab seperti biasa tanpa
+  konteks dokumen.
+- Opsi lain (`syncOnStartBlocking`, `childTopK`, dll.) ada di
+  `src/config/rag.ts`.
+
+### Batasan fase 1
+
+- Hanya `.txt` dan `.md`.
+- Reranker, upload dokumen via Discord, dan PDF/DOCX menyusul di fase berikutnya.
+
+---
+
 ## Roadmap
 
 Fase berikutnya yang direncanakan (belum diimplementasikan):
