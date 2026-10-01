@@ -22,3 +22,17 @@ test("makeChildren memecah parent jadi potongan lebih kecil", () => {
 test("child pendek → satu child", () => {
   expect(makeChildren("cukup pendek").length).toBe(1);
 });
+
+test("token panjang tanpa spasi tidak menghasilkan cascade duplikat", () => {
+  const text = "a ".repeat(100) + "x".repeat(1000) + " end words here";
+  const children = makeChildren(text, 400, 80);
+  // sebelum fix: puluhan chunk near-duplikat; sesudah: jumlah wajar
+  expect(children.length).toBeLessThan(12);
+  for (const c of children) expect(c.length).toBeLessThanOrEqual(400);
+});
+
+test("overlap >= chunkSize di-clamp (tidak crawl +1 per char)", () => {
+  const text = "kata ".repeat(400); // ~2000 char
+  const chunks = makeParents(text, 100, 500); // overlap > chunkSize
+  expect(chunks.length).toBeLessThan(60); // bukan ~2000
+});
