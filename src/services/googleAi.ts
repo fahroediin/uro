@@ -6,6 +6,7 @@ import {
 } from "@google/genai";
 import { aiConfig, guardrails } from "../config";
 import { keyRotator } from "./keyRotator";
+import { ragConfig } from "../config/rag";
 
 const RATE_LIMIT_MESSAGE =
   "Duh, Uro lagi kena limit dari Google nih (Quota Exceeded / 429). Bentar ya, kasih waktu Uro buat napas semenit, baru coba lagi! 🐍";
@@ -167,5 +168,20 @@ export const aiService = {
       }
       throw e;
     }
+  },
+
+  /**
+   * Embeds texts via Gemini embedContent. Used by the RAG pipeline.
+   * @param taskType e.g. "RETRIEVAL_QUERY" or "RETRIEVAL_DOCUMENT".
+   */
+  embedTexts: async (texts: string[], taskType: string): Promise<number[][]> => {
+    return await keyRotator.execute(async (ai) => {
+      const response = await ai.models.embedContent({
+        model: ragConfig.embedModel,
+        contents: texts,
+        config: { taskType },
+      });
+      return (response.embeddings ?? []).map((e: any) => e.values as number[]);
+    });
   },
 };
