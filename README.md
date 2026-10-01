@@ -350,10 +350,11 @@ berperilaku persis seperti biasa sampai kamu mengaktifkannya.
 ### Cara pakai
 
 1. Taruh file `.txt` / `.md` di folder `documents/` (folder ini di-gitignore).
-2. Set `enabled: true` di `src/config/rag.ts` (`ragConfig.enabled`).
+2. Aktifkan RAG lewat `.env`: tambahkan baris `RAG_ENABLED=true`. Kosong atau
+   selain `true` berarti mati (default aman). Tidak perlu mengubah kode.
 3. Jalankan bot (`bun start`). Saat start, bot meng-index dokumen (sync
    berbasis hash: hanya file baru/berubah yang di-embed ulang, file yang
-   dihapus ikut dibersihkan dari index).
+   dihapus ikut dibersihkan dari index). Di log muncul `[rag] sync: indexed=N`.
 4. Tanya isi dokumen di channel bot — bot menjawab dari dokumen dan menyebut
    sumbernya.
 

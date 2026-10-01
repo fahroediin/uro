@@ -8,6 +8,9 @@ const EnvSchema = z.object({
   // berada di region yang diblokir Gemini — arahkan ke proxy di region yang
   // didukung yang meneruskan ke generativelanguage.googleapis.com.
   GEMINI_BASE_URL: z.string().optional(),
+  // (Opsional) Aktifkan RAG (jawab dari dokumen di folder documents/).
+  // Isi "true" untuk menyalakan; kosong/selain "true" = mati (default aman).
+  RAG_ENABLED: z.string().optional(),
 });
 
 export type env = z.infer<typeof EnvSchema>;
