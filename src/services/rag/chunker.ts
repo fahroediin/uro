@@ -3,8 +3,8 @@ function splitWithOverlap(text: string, chunkSize: number, overlap: number): str
   const clean = text.trim();
   if (!clean || clean.length <= chunkSize) return clean ? [clean] : [];
 
-  // Clamp overlap so it's at most half of chunkSize, ensuring forward progress
-  const ov = Math.max(0, Math.min(overlap, Math.floor(chunkSize / 2)));
+  // Clamp overlap to match boundary-acceptance threshold (chunkSize/4) to prevent cascade on large overlaps
+  const ov = Math.max(0, Math.min(overlap, Math.floor(chunkSize / 4)));
 
   const chunks: string[] = [];
   let start = 0;

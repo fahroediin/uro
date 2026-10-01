@@ -36,3 +36,10 @@ test("overlap >= chunkSize di-clamp (tidak crawl +1 per char)", () => {
   const chunks = makeParents(text, 100, 500); // overlap > chunkSize
   expect(chunks.length).toBeLessThan(60); // bukan ~2000
 });
+
+test("overlap besar + token tanpa spasi: tetap sedikit chunk (clamp ke cs/4)", () => {
+  const text = "x".repeat(3000);
+  const chunks = makeParents(text, 1000, 500); // overlap > cs/4
+  expect(chunks.length).toBeLessThan(10); // bukan ratusan
+  for (const c of chunks) expect(c.length).toBeLessThanOrEqual(1000);
+});
