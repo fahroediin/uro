@@ -104,3 +104,28 @@ export function splitTextPreserveWords(text: string, maxChunkSize = 1500) {
 
   return chunks;
 }
+
+const GREETINGS = [
+  "hai",
+  "halo",
+  "hi",
+  "hello",
+  "pagi",
+  "siang",
+  "sore",
+  "malam",
+  "terima kasih",
+  "makasih",
+  "thanks",
+  "ok",
+  "oke",
+  "sip",
+];
+
+export function isGreeting(text: string): boolean {
+  const cleaned = text.toLowerCase().trim();
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  return (
+    words.length <= 2 && GREETINGS.some((g) => cleaned.includes(g))
+  );
+}
