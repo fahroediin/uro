@@ -42,6 +42,7 @@ export interface EngineDeps {
   db: DbLike;
   ai: AiLike;
   buildSystemPrompt: (userName: string, platform: Platform) => string;
+  botName: string;
   fetchBuffer?: (url: string) => Promise<ArrayBuffer | null>;
   guardrails: { allowAttachments: boolean; maxFileSize: number; allowedChannels: string[] };
   responseConfig: { typingIndicator: boolean; errorMessages: { generic: string; attachmentFail: string } };
@@ -134,6 +135,19 @@ export function createConversationEngine(deps: EngineDeps): { handle: MessageHan
     async function reply(text: string, image?: Buffer) {
       const out: OutgoingMessage = { text, image, replyToMessageId: primary.messageId };
       await adapter.sendMessage(primary.chatId, out);
+      // Simpan balasan bot ke history agar pada giliran berikutnya bot tahu apa
+      // yang sudah ia jawab (mencegah pengulangan). Teks utuh dipotong 500 char.
+      deps.db.addChannelMessage({
+        messageId: `bot-${primary.messageId}-${Date.now()}`,
+        channelId: primary.chatId,
+        content: text.substring(0, 500),
+        authorId: "bot",
+        authorUsername: deps.botName,
+        timestamp: Date.now(),
+        repliedMessage: "",
+        repliedMessageId: "",
+        repliedTo: "",
+      });
     }
 
     if (att) {

@@ -1,5 +1,5 @@
 import env from "../env";
-import { buildSystemPrompt, guardrails, responseConfig } from "./config";
+import { buildSystemPrompt, guardrails, responseConfig, persona } from "./config";
 import { createConversationEngine } from "./core/conversationEngine";
 import { PlatformRegistry } from "./core/platformRegistry";
 import { dbService } from "./services/database";
@@ -33,6 +33,7 @@ const engine = createConversationEngine({
   db: dbService,
   ai: aiService,
   buildSystemPrompt,
+  botName: persona.name,
   guardrails: {
     allowAttachments: guardrails.allowAttachments,
     maxFileSize: guardrails.maxFileSize,

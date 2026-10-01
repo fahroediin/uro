@@ -12,6 +12,7 @@ function deps(retrieveContext?: (q: string) => Promise<string>) {
       async generateContentWithFileContext() { return { text: "x" }; },
     },
     buildSystemPrompt: () => "SYS",
+    botName: "Uro",
     guardrails: { allowAttachments: true, maxFileSize: 999, allowedChannels: [] },
     responseConfig: { typingIndicator: false, errorMessages: { generic: "e", attachmentFail: "f" } },
     debounceDelayMs: 5,

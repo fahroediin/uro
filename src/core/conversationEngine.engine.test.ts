@@ -16,6 +16,7 @@ function makeDeps() {
       generateContentWithFileContext: async () => ({ text: "jawaban file" }),
     },
     buildSystemPrompt: () => "SYS",
+    botName: "Uro",
     fetchBuffer: async () => null,
     guardrails: { allowAttachments: true, maxFileSize: 999999, allowedChannels: [] as string[] },
     responseConfig: {
@@ -49,7 +50,7 @@ test("pesan yang dibalas memanggil AI dan mengirim balasan", async () => {
   const engine = createConversationEngine(deps as any);
   await engine.handle(msg(), adapter);
   await wait(40);
-  expect(added.length).toBe(1);              // tercatat ke history
+  expect(added.length).toBe(2);              // pesan user + balasan bot tercatat ke history
   expect(sent.length).toBe(1);               // ada balasan
   expect(sent[0].msg.text).toBe("jawaban AI");
 });
@@ -74,7 +75,7 @@ test("allowedChannels berisi RAW id (tanpa prefix) tetap match dengan chatId ber
   // sehingga test ini murni memverifikasi gate allowedChannels di conversationEngine.
   await engine.handle(msg({ isMentioned: true, chatId: "discord:c1" }), adapter);
   await wait(40);
-  expect(added.length).toBe(1);
+  expect(added.length).toBe(2);   // pesan user + balasan bot
   expect(sent.length).toBe(1);
   expect(sent[0].msg.text).toBe("jawaban AI");
 });
