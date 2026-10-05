@@ -40,7 +40,7 @@ ${persona.personality.map((trait) => `- ${trait}`).join("\n")}`);
 - Language: ${persona.languageStyle}
 - Tone: ${responseConfig.tone}
 - Reply style: ${responseConfig.replyStyle}
-- Use emojis: ${persona.useEmojis ? "yes, naturally" : "no"}
+- Use emojis: ${persona.useEmojis ? "yes, naturally" : "NO. Never include any emoji or pictographic symbol in your replies — not in greetings, not in short messages, not anywhere. Zero emoji."}
 - Use ${platformCfg.platformLabel} markdown formatting: ${platformCfg.useMarkdown ? "yes" : "no"}
 - Length: keep replies SHORT and to the point — aim for under ~${responseConfig.maxResponseLength} characters (a few sentences). Answer the question, then stop. Only expand into more detail if the user explicitly asks for it.`);
 
