@@ -1,5 +1,5 @@
 import { platformConfigs } from "../config/platforms";
-import { formatTimestamp, isGreeting } from "../helpers/util";
+import { formatTimestamp, isGreeting, stripDecorations } from "../helpers/util";
 import type {
   MessageHandler,
   NormalizedMessage,
@@ -43,6 +43,7 @@ export interface EngineDeps {
   ai: AiLike;
   buildSystemPrompt: (userName: string, platform: Platform) => string;
   botName: string;
+  stripEmoji?: boolean;
   fetchBuffer?: (url: string) => Promise<ArrayBuffer | null>;
   guardrails: { allowAttachments: boolean; maxFileSize: number; allowedChannels: string[] };
   responseConfig: { typingIndicator: boolean; errorMessages: { generic: string; attachmentFail: string } };
@@ -133,14 +134,17 @@ export function createConversationEngine(deps: EngineDeps): { handle: MessageHan
     }
 
     async function reply(text: string, image?: Buffer) {
-      const out: OutgoingMessage = { text, image, replyToMessageId: primary.messageId };
+      // Jaring pengaman: buang emoji & em-dash bila persona melarang emoji,
+      // apa pun yang dihasilkan model (deterministik, bukan sekadar instruksi).
+      const clean = deps.stripEmoji ? stripDecorations(text) : text;
+      const out: OutgoingMessage = { text: clean, image, replyToMessageId: primary.messageId };
       await adapter.sendMessage(primary.chatId, out);
       // Simpan balasan bot ke history agar pada giliran berikutnya bot tahu apa
       // yang sudah ia jawab (mencegah pengulangan). Teks utuh dipotong 500 char.
       deps.db.addChannelMessage({
         messageId: `bot-${primary.messageId}-${Date.now()}`,
         channelId: primary.chatId,
-        content: text.substring(0, 500),
+        content: clean.substring(0, 500),
         authorId: "bot",
         authorUsername: deps.botName,
         timestamp: Date.now(),

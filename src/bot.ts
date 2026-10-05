@@ -35,6 +35,7 @@ const engine = createConversationEngine({
   ai: aiService,
   buildSystemPrompt,
   botName: persona.name,
+  stripEmoji: !persona.useEmojis,
   guardrails: {
     allowAttachments: guardrails.allowAttachments,
     maxFileSize: guardrails.maxFileSize,

@@ -9,7 +9,7 @@ type Saved = {
   authorId: string;
 };
 
-function makeDeps(opts: { aiText?: string; generateThrows?: boolean } = {}) {
+function makeDeps(opts: { aiText?: string; generateThrows?: boolean; stripEmoji?: boolean } = {}) {
   const saved: Saved[] = [];
   const sent: { chatId: string; msg: OutgoingMessage }[] = [];
   const d: any = {
@@ -27,6 +27,7 @@ function makeDeps(opts: { aiText?: string; generateThrows?: boolean } = {}) {
     },
     buildSystemPrompt: () => "SYS",
     botName: "Uro",
+    stripEmoji: opts.stripEmoji ?? false,
     guardrails: { allowAttachments: true, maxFileSize: 999, allowedChannels: [] },
     responseConfig: { typingIndicator: false, errorMessages: { generic: "ERR", attachmentFail: "f" } },
     debounceDelayMs: 5,
@@ -61,6 +62,28 @@ test("balasan bot disimpan ke history dengan nama bot", async () => {
   expect(botEntry).toBeDefined();
   expect(botEntry!.content).toContain("Harga premium 100rb.");
   expect(botEntry!.channelId).toBe("discord:c1");
+});
+
+test("stripEmoji on: balasan terkirim & tersimpan tanpa emoji", async () => {
+  const { d, adapter, saved, sent } = makeDeps({
+    aiText: "Yuhu juga, Fahrudin. Ada perlu apa? 🐍",
+    stripEmoji: true,
+  });
+  const engine = createConversationEngine(d);
+  await engine.handle(msg(), adapter);
+  await wait(40);
+
+  expect(sent[0].msg.text).toBe("Yuhu juga, Fahrudin. Ada perlu apa?");
+  const botEntry = saved.find((s) => s.authorUsername === "Uro");
+  expect(botEntry!.content.includes("🐍")).toBe(false);
+});
+
+test("stripEmoji off: emoji dibiarkan", async () => {
+  const { d, adapter, sent } = makeDeps({ aiText: "halo 🐍", stripEmoji: false });
+  const engine = createConversationEngine(d);
+  await engine.handle(msg(), adapter);
+  await wait(40);
+  expect(sent[0].msg.text).toBe("halo 🐍");
 });
 
 test("pesan error TIDAK disimpan ke history", async () => {

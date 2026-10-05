@@ -129,3 +129,27 @@ export function isGreeting(text: string): boolean {
     words.length <= 2 && GREETINGS.some((g) => cleaned.includes(g))
   );
 }
+
+/**
+ * Jaring pengaman deterministik: buang emoji/pictographic dan em/en-dash dari
+ * teks balasan, TANPA merusak simbol kode/operator (=>, !==, {}, dll) atau
+ * hyphen biasa. Dipakai saat persona.useEmojis = false.
+ */
+export function stripDecorations(text: string): string {
+  if (!text) return text;
+  return (
+    text
+      // Buang emoji & simbol gambar (Extended_Pictographic) beserta
+      // variation selector (U+FE0F) dan zero-width joiner (U+200D).
+      .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE00}-\u{FE0F}\u{200D}]/gu, "")
+      // em-dash / en-dash / horizontal bar -> hyphen biasa (jaga alur kalimat).
+      .replace(/[–—―]/g, "-")
+      // Rapikan spasi ganda yang tersisa setelah penghapusan.
+      .replace(/ {2,}/g, " ")
+      // Rapikan spasi sebelum tanda baca yang MENGAKHIRI kata (mis. "halo ." ->
+      // "halo."), tapi jangan sentuh operator seperti "!==" atau "?." — hanya
+      // kalau tanda baca diikuti spasi/akhir string.
+      .replace(/ +([.,!?;:])(\s|$)/g, "$1$2")
+      .trim()
+  );
+}
