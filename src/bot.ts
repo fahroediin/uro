@@ -7,6 +7,7 @@ import { aiService } from "./services/googleAi";
 import { ragConfig } from "./config/rag";
 import { createRagService } from "./services/rag";
 import { DiscordAdapter } from "./adapters/discord/discordAdapter";
+import { TelegramAdapter } from "./adapters/telegram/telegramAdapter";
 
 // RAG (default OFF). Dibangun sebelum engine agar retrieveContext bisa di-inject.
 let retrieveContext: ((q: string) => Promise<string>) | undefined;
@@ -55,8 +56,10 @@ const registry = new PlatformRegistry();
 if (env.DISCORD_BOT_TOKEN) {
   registry.register(new DiscordAdapter(env.DISCORD_BOT_TOKEN, engine.handle));
 }
+if (env.TELEGRAM_BOT_TOKEN) {
+  registry.register(new TelegramAdapter(env.TELEGRAM_BOT_TOKEN, engine.handle));
+}
 // Slot masa depan (belum diimplementasi):
-// if (env.TELEGRAM_BOT_TOKEN) registry.register(new TelegramAdapter(...));
-// if (env.WHATSAPP_ENABLED)   registry.register(new WhatsappAdapter(...));
+// if (env.WHATSAPP_ENABLED) registry.register(new WhatsappAdapter(...));
 
 await registry.startAll();

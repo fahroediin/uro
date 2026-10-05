@@ -11,6 +11,9 @@ const EnvSchema = z.object({
   // (Opsional) Aktifkan RAG (jawab dari dokumen di folder documents/).
   // Isi "true" untuk menyalakan; kosong/selain "true" = mati (default aman).
   RAG_ENABLED: z.string().optional(),
+  // (Opsional) Token bot Telegram dari @BotFather. Kalau diisi, bot juga
+  // tersambung ke Telegram (long-polling). Kosong = Telegram tidak aktif.
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
 });
 
 export type env = z.infer<typeof EnvSchema>;

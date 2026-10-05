@@ -5,9 +5,9 @@
 
 Chatbot AI powered by **Google Gemini** dengan **konfigurasi penuh** atas
 kepribadian, guardrails, dan gaya respons — dibangun di atas arsitektur
-**core + adapter** yang platform-agnostic. **Discord** aktif sebagai adapter
-saat ini; **Telegram** dan **WhatsApp** sudah disiapkan tempatnya sebagai
-adapter berikutnya (lihat [Arsitektur Multi-Platform](#arsitektur-multi-platform)).
+**core + adapter** yang platform-agnostic. **Discord** dan **Telegram** aktif
+sebagai adapter; **WhatsApp** sudah disiapkan tempatnya sebagai adapter
+berikutnya (lihat [Arsitektur Multi-Platform](#arsitektur-multi-platform)).
 
 ---
 
@@ -342,6 +342,33 @@ curl -s -w "\n[HTTP %{http_code}]\n" -X POST \
 
 ---
 
+## Telegram
+
+Bot bisa jalan di Telegram **berbarengan** dengan Discord (satu proses, satu
+otak). Memakai [grammy](https://grammy.dev/) + long-polling, jadi **tidak perlu
+webhook / domain / HTTPS publik** — cukup token bot.
+
+### Cara pakai
+
+1. Buat bot & ambil token dari [@BotFather](https://t.me/BotFather)
+   (`/newbot` → ikuti langkahnya → salin token).
+2. Tambahkan ke `.env`: `TELEGRAM_BOT_TOKEN=<token-dari-botfather>`. Kosong =
+   Telegram tidak aktif (bot tetap jalan Discord-only).
+3. Jalankan bot (`bun start`). Di log muncul `Uro online (Telegram) as @namabot`.
+4. Chat japri (private) ke bot — **selalu dibalas tanpa perlu mention**. Di
+   grup, bot hanya membalas kalau di-tag `@namabot` atau pesannya me-reply
+   pesan bot.
+
+### Catatan fase 1
+
+- Fokus **chat teks**. Media/attachment Telegram belum dipetakan.
+- Balasan **plain text** (tanpa MarkdownV2). Limit per pesan 4096 char
+  (otomatis dipecah).
+- Semua fitur core otomatis ikut: memori percakapan, RAG (bila `RAG_ENABLED`),
+  dan waktu WIB — tanpa konfigurasi tambahan.
+
+---
+
 ## RAG (Knowledge Base Dokumen)
 
 Bot bisa menjawab berdasarkan dokumen milikmu sendiri. **Default OFF** — bot
@@ -377,13 +404,14 @@ berperilaku persis seperti biasa sampai kamu mengaktifkannya.
 
 ## Roadmap
 
-Fase berikutnya yang direncanakan (belum diimplementasikan):
+Sudah aktif: **Discord**, **Telegram** (grammy), dan **RAG** (knowledge base
+dokumen). Fase berikutnya yang direncanakan (belum diimplementasikan):
 
-- **Adapter Telegram** (pakai [grammy](https://grammy.dev/)) dan
-  **adapter WhatsApp** (pakai
-  [whatsapp-web.js](https://wwebjs.dev/)) — tinggal ikuti langkah di
-  [Menambah Platform Baru](#menambah-platform-baru) di atas. Slot pendaftaran
-  keduanya sudah disiapkan (dikomentari) di `src/bot.ts`.
+- **Adapter WhatsApp** (pakai [whatsapp-web.js](https://wwebjs.dev/)) — tinggal
+  ikuti langkah di [Menambah Platform Baru](#menambah-platform-baru) di atas.
+  Slot pendaftarannya sudah disiapkan (dikomentari) di `src/bot.ts`.
+- **Reranker** nyata untuk RAG, ekstraktor PDF/DOCX, dan upload dokumen via
+  command Discord/Telegram.
 - **`laya`** — gerbang keputusan lokal (local decision gate) sebelum request
   diteruskan ke Gemini, untuk mengurangi pemakaian API pada kasus yang tidak
   perlu AI.
