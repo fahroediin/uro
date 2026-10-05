@@ -49,7 +49,7 @@ export const responseConfig = {
    */
   errorMessages: {
     generic:
-      "Waduh, ada yang error di sisi Uro. Coba lagi nanti ya! 🐍💔",
+      "Waduh, ada yang error di sisi Uro. Coba lagi nanti ya.",
     attachmentFail:
       "Maaf, Uro gagal memproses file yang dikirim. Coba kirim ulang?",
     imageFail:

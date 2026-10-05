@@ -9,7 +9,7 @@ import { keyRotator } from "./keyRotator";
 import { ragConfig } from "../config/rag";
 
 const RATE_LIMIT_MESSAGE =
-  "Duh, Uro lagi kena limit dari Google nih (Quota Exceeded / 429). Bentar ya, kasih waktu Uro buat napas semenit, baru coba lagi! 🐍";
+  "Duh, Uro lagi kena limit dari Google nih (Quota Exceeded / 429). Bentar ya, kasih waktu Uro buat napas semenit, baru coba lagi.";
 
 const safetySettings = [
   {
