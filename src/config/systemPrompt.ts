@@ -42,7 +42,7 @@ ${persona.personality.map((trait) => `- ${trait}`).join("\n")}`);
 - Reply style: ${responseConfig.replyStyle}
 - Use emojis: ${persona.useEmojis ? "yes, naturally" : "no"}
 - Use ${platformCfg.platformLabel} markdown formatting: ${platformCfg.useMarkdown ? "yes" : "no"}
-- Max response length: ~${responseConfig.maxResponseLength} characters. If longer, split into logical sections.`);
+- Length: keep replies SHORT and to the point — aim for under ~${responseConfig.maxResponseLength} characters (a few sentences). Answer the question, then stop. Only expand into more detail if the user explicitly asks for it.`);
 
   // ─── MUST DO ───────────────────────────────────────────────
   if (persona.mustDo.length > 0) {

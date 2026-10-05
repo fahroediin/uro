@@ -18,13 +18,14 @@ export const responseConfig = {
    * Gaya reply — seberapa panjang jawaban default.
    * Opsi: "concise" | "detailed" | "balanced"
    */
-  replyStyle: "balanced" as const,
+  replyStyle: "concise" as const,
 
   /**
-   * Panjang maksimum respons dalam karakter.
-   * Discord limit = 2000 chars per message.
+   * Target panjang respons dalam karakter (instruksi ke model, bukan
+   * pemotongan keras). Semakin kecil, semakin didorong ringkas.
+   * Split pesan tetap mengikuti maxChunkSize per-platform.
    */
-  maxResponseLength: 1800,
+  maxResponseLength: 600,
 
   /**
    * Otomatis split pesan panjang ke beberapa message.
